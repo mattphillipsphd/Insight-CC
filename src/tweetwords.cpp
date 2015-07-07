@@ -18,7 +18,7 @@ TweetWords::TweetWords(const std::string& input_file, const std::string& ft1)
 int TweetWords::AddTweet(const Tweet& tweet)
 {
 	int unique_ct;
-	std::multiset<std::string>&& words = tweet.Words(unique_ct);
+	std::multiset<std::string>&& words = tweet.WordsStrtok(unique_ct);
 	UpdateWordCount(words);
 	return unique_ct;
 }

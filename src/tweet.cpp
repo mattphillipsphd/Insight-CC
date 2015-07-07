@@ -1,5 +1,7 @@
 #include "tweet.h"
 
+#include "C:\Users\matt\Libraries\boost_1_55_0\boost\tokenizer.hpp"
+
 Tweet::Tweet(const std::string&& text) : _rawText(text)
 {
 }
@@ -36,6 +38,50 @@ std::multiset<std::string> Tweet::Words(int& unique_ct) const
 		}
 			//The test before the insertion ensures that sequential whitespace
 			//is ignored.
+	}
+	
+	return words;
+}
+
+//Boost tokenizer may add more flexibility, but this is not faster than C++
+std::multiset<std::string> Tweet::WordsBoost(int& unique_ct) const
+{
+	std::multiset<std::string> words;
+	unique_ct = 0;
+	
+	boost::char_separator<char> sep(" \t\v\r\f");
+	boost::tokenizer< boost::char_separator<char> > tok(_rawText, sep);
+	for(auto beg=tok.begin(); beg!=tok.end(); ++beg)
+		if ((*beg).length()>0)
+		{
+			words.insert(*beg);
+			++unique_ct;
+		}
+		
+	return words;
+}
+
+
+//Looks like this substantially faster than C++ version, even with the copy
+std::multiset<std::string> Tweet::WordsStrtok(int& unique_ct) const
+{
+	std::multiset<std::string> words;
+	unique_ct = 0;
+	
+	const char whitespace[] = " \t\v\r\f"; 
+	char text[140];
+	strcpy(text, _rawText.c_str());
+	
+	char* tok = strtok(text, whitespace);
+	while (tok)
+	{
+		if (strlen(tok)>0)
+		{
+			words.insert(tok);
+			++unique_ct;
+		}
+		tok = strtok(NULL, whitespace);
+		
 	}
 	
 	return words;

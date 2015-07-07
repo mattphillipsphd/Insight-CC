@@ -22,17 +22,18 @@ class Tweet
 		explicit Tweet(const std::string&& text);
 		
 		/*
-			UniqueWords(): Returns a set of the words in the tweet, which by 
-			definition of std::set, will alphabetize them and include only 
-			unique elements.
-				Note that UniqueWords *ignores* sequential whitespace.  It will 
+			Words(): Returns a set of the words in the tweet, which by 
+			definition of std::multiset, will alphabetize them.
+				Note that Words *ignores* sequential whitespace.  It will 
 			not return a set with empty words.
 		*/
 		std::multiset<std::string> Words(int& unique_ct) const;
+		std::multiset<std::string> WordsBoost(int& unique_ct) const;
+		std::multiset<std::string> WordsStrtok(int& unique_ct) const;
 		
 	private:
 	
-		//_rawText:  The raw text of the tweet as it is read from the file.
+		//_rawText:  The raw text of the tweet as it is read from the file
 		const std::string _rawText;
 };
 
