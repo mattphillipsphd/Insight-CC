@@ -13,7 +13,7 @@
 	us to keep track of frequency counts with a small integer array (_freqCts) and
 	use the current median index (_medianIdx), along with a number representing how 
 	close the distribution is to the 'tipping point' from one median value to the next 
-	(_groupIdx), to	update the median in constant time.
+	(_groupIdx), to	update the median in linear time wrt the number of medians.
 */
 class RunningMedian
 {
