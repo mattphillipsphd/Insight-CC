@@ -21,8 +21,8 @@
 #include <thread>
 #include <vector>
 
-typedef unsigned char			uchar;
-typedef unsigned long long		ULL;
+typedef unsigned char					uchar;
+typedef std::chrono::milliseconds		TimeT;
 
 #define MAX_TWEET_LEN			140
 

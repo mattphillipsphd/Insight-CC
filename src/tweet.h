@@ -28,8 +28,6 @@ class Tweet
 			not return a set with empty words.
 		*/
 		std::multiset<std::string> Words(int& unique_ct) const;
-		std::multiset<std::string> WordsBoost(int& unique_ct) const;
-		std::multiset<std::string> WordsStrtok(int& unique_ct) const;
 		
 	private:
 	

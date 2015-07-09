@@ -14,19 +14,17 @@
 	current tweet are retrieved using Tweet::UniqueWords and inserted into a
 	std::multiset, _words.  The implementation of std::multiset keeps track
 	of the number of repeats so it is an ideal data structure for representing frequency.
-	For speed given a resonably modern machine, we use multiple threads to read
-	in and process tweets.  Measured against an earlier single-threaded version 
-	of this program, multi-threading led to a substantial (4x) speedup on an 8-core
-	Windows laptop.  However urprisingly little measurable speedup on a 12-core Ubuntu,
-	desktop was seen, although there was still some gain.  Time was measured
-	for the execution of the entire program.
+	For potentail speed increase, we use multiple threads to read
+	in and process tweets.  However testing did not reveal a consistent improvement
+	so we have left the default to be single-threaded, with multiple threads 
+	specifiable as an argument to the main program.
 */
 class TweetWords
 {
 	public:
-		static const int AVG_WORDS_PER_TWEET = 11; //According to OxfordWords
+		static const int AVG_WORDS_PER_TWEET = 10; //According to OxfordWords, rounding down
 		
-		TweetWords(const std::string& input_file, const std::string& ft1);
+		TweetWords(const std::string& input_file, const std::string& ft1, int max_threads = -1);
 		
 		/*
 			AddTweet(): Processes a tweet.  It calls Tweet::UniqueWords 
@@ -46,7 +44,7 @@ class TweetWords
 		*/
 		void ReadTweets();
 		
-		ULL NumBytes() const { return _numBytes; }
+		long int NumBytes() const { return _numBytes; }
 		
 		/*
 			Return a vector containing the number of unique words for every tweet processed.
@@ -66,7 +64,7 @@ class TweetWords
 			processing of the input file.
 			Modifies: _countSet, _numThreads, _threadsLeft, _thdStarts
 		*/
-		inline void InitThreads();
+		inline void InitThreads(int max_threads);
 		
 		/*
 			ReadTweetsT: For a given segment of the input file, this function reads
@@ -93,11 +91,10 @@ class TweetWords
 		std::mutex _mutex;
 		
 		//_numBytes: Number of bytes in the file
-		ULL _numBytes;
+		long int _numBytes;
 		
-		//_numThreads, _threadsLeft, _thdStarts: Thread management data members 
+		//_numThreads, _thdStarts: Thread management data members 
 		int _numThreads;
-		std::atomic<int> _threadsLeft;
 		std::vector<std::streampos> _thdStarts;
 	
 		//_words: Stores the unique words from all tweets and their frequencies,

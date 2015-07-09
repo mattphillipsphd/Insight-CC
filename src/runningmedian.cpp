@@ -1,6 +1,6 @@
 #include "runningmedian.h"
 
-RunningMedian::RunningMedian(const std::string& ft2, int num_bytes) 
+RunningMedian::RunningMedian(const std::string& ft2, long int num_bytes) 
 	: _ft2(ft2), _groupIdx(-1), _medianIdx(-1)
 {
 	memset(_freqCts, 0, sizeof(int)*MAX_WORD_CT);

@@ -24,7 +24,7 @@ class RunningMedian
 		*/
 		static const int 	MAX_WORD_CT = MAX_TWEET_LEN/2 + 1;
 							
-		RunningMedian(const std::string& ft2, int num_bytes);
+		RunningMedian(const std::string& ft2, long int num_bytes);
 		
 		/*
 			UpdateMedian(): Calls UpdateMedian(...) for each element in word_cts.
