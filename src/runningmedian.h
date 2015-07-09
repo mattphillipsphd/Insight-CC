@@ -19,12 +19,10 @@ class RunningMedian
 {
 	public:
 		/* 	
-			MAX_TWEET_LEN, MAX_WORD_CT: Constants for array initialization.  
-			MAX_TWEET_LEN is self-explanatory, MAX_WORD_CT
+			MAX_WORD_CT: Constant for array initialization.  MAX_WORD_CT
 			is the maximum possible words in a tweet (+1 for indexing reasons).
 		*/
-		static const int 	MAX_TWEET_LEN = 140,
-							MAX_WORD_CT = MAX_TWEET_LEN/2 + 1;
+		static const int 	MAX_WORD_CT = MAX_TWEET_LEN/2 + 1;
 							
 		RunningMedian(const std::string& ft2, int num_bytes);
 		

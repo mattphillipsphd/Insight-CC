@@ -60,14 +60,7 @@ class TweetWords
 		
 	private:
 		static const int MS_THREAD_WAIT = 500;
-	
-		/*
-			DecThreadCt: As threads complete they call this function which decrements
-			the thread counter in a thread-safe way.
-			Modifies: _threadsLeft
-		*/
-		inline void DecThreadCt();
-		
+			
 		/*
 			InitThreads: Sets up the threads and associated file locations for parallel
 			processing of the input file.
@@ -103,7 +96,8 @@ class TweetWords
 		ULL _numBytes;
 		
 		//_numThreads, _threadsLeft, _thdStarts: Thread management data members 
-		int _numThreads, _threadsLeft;
+		int _numThreads;
+		std::atomic<int> _threadsLeft;
 		std::vector<std::streampos> _thdStarts;
 	
 		//_words: Stores the unique words from all tweets and their frequencies,

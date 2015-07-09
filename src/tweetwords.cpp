@@ -18,7 +18,7 @@ TweetWords::TweetWords(const std::string& input_file, const std::string& ft1)
 int TweetWords::AddTweet(const Tweet& tweet)
 {
 	int unique_ct;
-	std::multiset<std::string>&& words = tweet.WordsStrtok(unique_ct);
+	std::multiset<std::string>&& words = tweet.Words(unique_ct);
 	UpdateWordCount(words);
 	return unique_ct;
 }
@@ -66,12 +66,6 @@ void TweetWords::Write() const
 	out.close();
 }
 
-void TweetWords::DecThreadCt()
-{
-	std::lock_guard<std::mutex> lock(_mutex);
-	--_threadsLeft;
-}
-
 //We divide the file length into as many contiguous pieces as there are threads,
 //and then prepare each thread to read just from its segment.  The results
 //are collected in _countSet
@@ -116,7 +110,7 @@ void TweetWords::ReadTweetsT(int tnum, std::streampos start, std::streampos end)
 	in.close();
 	_countSet[tnum] = cts;
 
-	DecThreadCt();
+	--_threadsLeft;
 }
 
 void TweetWords::UpdateWordCount(const std::multiset<std::string>& tweet_words)

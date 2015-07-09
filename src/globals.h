@@ -9,7 +9,7 @@
 */
 
 #include <algorithm>
-#include <assert.h>
+#include <atomic>
 #include <chrono>
 #include <cstring>
 #include <fstream>
@@ -23,5 +23,7 @@
 
 typedef unsigned char			uchar;
 typedef unsigned long long		ULL;
+
+#define MAX_TWEET_LEN			140
 
 #endif //GLOBALS_H

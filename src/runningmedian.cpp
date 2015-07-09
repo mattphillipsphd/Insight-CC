@@ -53,6 +53,11 @@ void RunningMedian::Write() const
 	For the purpose of indexing with _groupIdx, the size of a bin is set to 2 times
 	the number of values in that bin--so for bin 3 in our example, its size is 8.  This
 	allows us to increment/decrement _groupIdx in integer steps.
+	
+	Note: What is tracked is the median *index*, not the median itself.  These can be different
+	when the input count is even and the median is the average of two bin values.  In this case,
+	the median index will point to the lower of these two values, and the algorithm will calculate
+	the median as the average.
 */
 void RunningMedian::UpdateMedian(int word_ct)
 {

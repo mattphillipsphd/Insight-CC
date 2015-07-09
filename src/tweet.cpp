@@ -25,20 +25,19 @@ std::multiset<std::string> Tweet::Words(int& unique_ct) const
 		//We don't allow empty words
     size_t pos = _rawText.find_first_of(whitespace, pos0);
 	words.insert(_rawText.substr(pos0, pos-pos0));
-	++unique_ct;
     while (pos != std::string::npos)
 	{
 		const size_t last_pos = pos+1;
 		pos = _rawText.find_first_of(whitespace, last_pos);
 		const std::string word = _rawText.substr(last_pos, pos-last_pos);
-		if (!word.empty()) 
-		{
-			words.insert(word);
-			if (words.count(word)==1) ++unique_ct;
-		}
+		if (!word.empty()) words.insert(word);
 			//The test before the insertion ensures that sequential whitespace
 			//is ignored.
 	}
+	
+	auto words_end = words.cend();
+	for (auto it = words.cbegin(); it!=words_end; it = words.upper_bound(*it))
+		++unique_ct;
 	
 	return words;
 }
@@ -55,7 +54,7 @@ std::multiset<std::string> Tweet::WordsBoost(int& unique_ct) const
 		if ((*beg).length()>0)
 		{
 			words.insert(*beg);
-			++unique_ct;
+			if (words.count(*beg)==1) ++unique_ct;
 		}
 		
 	return words;
@@ -69,20 +68,22 @@ std::multiset<std::string> Tweet::WordsStrtok(int& unique_ct) const
 	unique_ct = 0;
 	
 	const char whitespace[] = " \t\v\r\f"; 
-	char text[140];
+	char text[MAX_TWEET_LEN];
 	strcpy(text, _rawText.c_str());
 	
 	char* tok = strtok(text, whitespace);
 	while (tok)
 	{
 		if (strlen(tok)>0)
-		{
 			words.insert(tok);
-			++unique_ct;
-		}
-		tok = strtok(NULL, whitespace);
-		
+
+		tok = strtok(NULL, whitespace);		
 	}
+	
+	auto words_end = words.cend();
+	for (auto it = words.cbegin(); it!=words_end; it = words.upper_bound(*it))
+		++unique_ct;
+		//Testing for uniqueness in the loop dramatically increases runtime(!)
 	
 	return words;
 }
