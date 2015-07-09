@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <climits>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
@@ -26,6 +27,6 @@ typedef std::chrono::milliseconds		TimeT;
 
 #define MAX_TWEET_LEN			140
 
-const long int MAX_CHUNK_SIZE = 1<<32;
+const long int MAX_CHUNK_SIZE = INT_MAX;
 
 #endif //GLOBALS_H

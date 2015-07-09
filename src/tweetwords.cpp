@@ -27,10 +27,11 @@ int TweetWords::AddTweet(const Tweet& tweet)
 	return unique_ct;
 }
 
-//We divide the file length into as many contiguous pieces as there are threads,
+//We divide the current file chunk into as many contiguous pieces as there are threads,
 //and then prepare each thread to read just from its segment.  The results
-//are collected in _countSet
-long int TweetWords::InitThreads(long int bstart, long int chunk_num)
+//are fed into the dictionary, _words, using the mutex-protected function UpdateWordCount.
+//The unique word counts are collected in _countSet and merged when UniqueCts is called.
+long int TweetWords::InitThreads(long int bstart)
 {
 	_thdStarts = std::vector<std::streampos>(_numThreads+1);
 	_thdStarts[0] = bstart;
@@ -42,14 +43,20 @@ long int TweetWords::InitThreads(long int bstart, long int chunk_num)
 	{
 		std::streampos offset = bstart + i*bytes_per_thread;
 		in.seekg(offset, std::ios_base::beg);
+		
+		//We cannot break the file mid-tweet.  So we take offset as a 'hint' and search
+		//for the first newline.  This will be the end of this piece and will determine
+		//the start of the next one.
 		char c;
 		do 
 			in.get(c);
-		while ( c != '\n' && in.good()) ;
+		while ( c != '\n' && c != EOF) ;
 		_thdStarts[i] = in.tellg();
 	}
 	in.close();
-	
+		
+	//We return the end point of the last file segment, which will be the start of the 
+	//next file chunk if there are multiple chunks.
 	return (long int)_thdStarts.at(_numThreads);
 }
 
@@ -95,6 +102,8 @@ void TweetWords::Write() const
 	out.close();
 }
 
+//We move to the start of the file segment assigned to this thread, and read
+//tweets until we reach the end.  Word counts are deposited in _words and _countSet.
 void TweetWords::ReadTweetsT(int tnum, std::streampos start, std::streampos end)
 {
 	std::ifstream in(_inputFile.c_str(), std::ifstream::in);
@@ -102,7 +111,7 @@ void TweetWords::ReadTweetsT(int tnum, std::streampos start, std::streampos end)
 	std::vector<uchar> cts;
 	cts.reserve( (int)(end - start) / AVG_WORDS_PER_TWEET );
 	std::string line;
-	while (in.tellg() < end - std::streampos(1))
+	while (in.tellg() < end && !in.eof())
 	{
 		std::getline(in, line);
 		int ct = AddTweet( Tweet( std::move(line) ) );

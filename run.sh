@@ -2,18 +2,22 @@
 
 INPUT_FN="tweet_input/tweets.txt"
 MAX_THREADS=1
-#Surprisingly multiple threads does not lead to improvement on my machine.
+#Testing indicated that multiple threads do not lead to improvement on my machine.
 
 if [[ $OSTYPE == "linux-gnu" ]]; then
-	rm -f tweet_digest;
-	g++ -std=c++11 -pthread \
-			src/main.cpp src/tweet.cpp src/runningmedian.cpp src/tweetwords.cpp \
-			-o tweet_digest
-	./tweet_digest $INPUT_FN $MAX_THREADS
+	TARGET=tweet_digest
+	if [ ! -e $TARGET ]; then
+		g++ -std=c++11 -pthread \
+				src/main.cpp src/tweet.cpp src/runningmedian.cpp src/tweetwords.cpp \
+				-o $TARGET
+	fi
 else
-	rm -f tweet_digest.exe;
-	g++ -std=c++11 src/main.cpp src/tweet.cpp src/runningmedian.cpp src/tweetwords.cpp -o tweet_digest
-	./tweet_digest.exe $INPUT_FN $MAX_THREADS
+	TARGET=tweet_digest.exe
+	if [ ! -e $TARGET ]; then
+		g++ -std=c++11 src/main.cpp src/tweet.cpp src/runningmedian.cpp src/tweetwords.cpp \
+				-o $TARGET
+	fi
 fi
 #Note, the -O3 compiler option does not measurably improve speed, tested on Windows
 
+./$TARGET $INPUT_FN $MAX_THREADS

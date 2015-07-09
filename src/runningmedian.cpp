@@ -24,7 +24,7 @@ void RunningMedian::Write()
 {
 	std::ofstream out(_ft2, std::ofstream::out | std::ofstream::app);
 	const int num_current_tweets = _medianTimes2.size();
-	out.precision(2);
+	out.precision(2); //As specified in the FAQ
 	out << std::fixed;
 	for (int i=0; i<num_current_tweets; ++i)
 		out << (float)_medianTimes2[i] / 2.0f << std::endl;

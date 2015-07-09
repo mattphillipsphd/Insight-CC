@@ -49,7 +49,7 @@ class TweetWords
 			processing of the input file.
 			Modifies: _countSet, _numThreads, _threadsLeft, _thdStarts
 		*/
-		long int InitThreads(long int bstart, long int bend);
+		long int InitThreads(long int bstart);
 		
 		long int NumBytes() const { return _numBytes; }
 		

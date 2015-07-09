@@ -1,6 +1,33 @@
 #include "runningmedian.h"
 #include "tweetwords.h"
 
+/*
+	This program differs from the 'naive' implementation of the two features in three ways:
+	
+	1) It breaks the input file into 2GB chunks and flushes the buffer containing the running
+		median to file after the completion of each chunk.  Since the running median is stored
+		very economically (one byte/value) this means that the memory consumption should be no more
+		than about 50MB at any point, and that the program can handle the largest possible input file.
+		The size of the file chunk is controlled with MAX_CHUNK_SIZE in globals.h.
+		
+	2) The running median is calculated by updating a few indexes (see runningmedian.cpp for details)
+		and so has complexity O(N) with input length as opposed to O(N*log(N)) or worse for a naive 
+		implementation.
+		
+	3) The calculation of words tweeted (feature 1) is in principle implemented in a multi-threaded
+		way.  However testing indicated that multiple threads did not improve performance so the
+		number of threads has been set to 1 in run.sh.  This a command-line argument which defaults
+		to the number of cores.
+		
+	In addition, this program makes substantial use of C++11 language features and data structures
+	(move semantics, multisets, et al.) for maximum efficiency.  The most time is spent writing 
+	the results to disk.  I experimented with file buffer size but could not improve on C++ defaults.
+	
+	Class TweetWords implements feature 1; class RunningMedian implements feature 2.  Class Tweet
+	encapsulates a single tweet.  Its functionality could be absorbed by TweetWords but for scalability
+	reasons, since it is such a central concept, it seems like a good idea to give it its own class.
+*/
+
 int main(int argc, char* argv[])
 {
 	std::string file_name = (argc<2)
@@ -12,6 +39,7 @@ int main(int argc, char* argv[])
 	TweetWords tweet_words(file_name, "tweet_output/ft1.txt", max_threads);
 	long int num_bytes = tweet_words.NumBytes();
 	const int num_chunks = num_bytes / MAX_CHUNK_SIZE + 1;
+		//The number of file chunks is determined by file size in bytes and the MAX_CHUNK_SIZE value.
 
 	RunningMedian rmed("tweet_output/ft2.txt");
 	
@@ -22,9 +50,11 @@ int main(int argc, char* argv[])
 		
 		//Feature 1
 		auto t0 = std::chrono::system_clock::now();
-		bstart = tweet_words.InitThreads(bstart, i);
+		bstart = tweet_words.InitThreads(bstart);
+			//We determine the start and end point within the file for each chunk, and for the
+			//threads within the chunk.
 		
-		tweet_words.ReadTweets();
+		tweet_words.ReadTweets(); //This creates the dictionary.
 		auto t1 = std::chrono::system_clock::now();
 		std::cout 	<< "Creating dictionary: "
 					<<std::chrono::duration_cast<TimeT>(t1-t0).count() << "ms." << std::endl;
@@ -32,11 +62,13 @@ int main(int argc, char* argv[])
 		//Feature 2
 		std::vector<uchar>&& unique_cts = tweet_words.UniqueCts();
 		rmed.UpdateMedian(unique_cts);
+			//We get the unique word counts from tweet_words and calculate the running median.
 		auto t2 = std::chrono::system_clock::now();
 		std::cout 	<< "Calculating median: "
 					<< std::chrono::duration_cast<TimeT>(t2-t1).count() << "ms." << std::endl;
 					
 		rmed.Write();
+			//Write feature 2 to disk.
 		auto t3 = std::chrono::system_clock::now();
 		std::cout 	<< "Writing ft2.txt: "
 					<< std::chrono::duration_cast<TimeT>(t3-t2).count() << "ms." << std::endl;
@@ -46,6 +78,7 @@ int main(int argc, char* argv[])
 	
 	auto t4 = std::chrono::system_clock::now();
 	tweet_words.Write();
+		//Write feature 1 to disk.
 	auto t5 = std::chrono::system_clock::now();
 	std::cout 	<< "Writing ft1.txt: " 
 				<< std::chrono::duration_cast<TimeT>(t5-t4).count() << "ms." << std::endl;
