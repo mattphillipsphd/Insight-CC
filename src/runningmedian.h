@@ -24,7 +24,7 @@ class RunningMedian
 		*/
 		static const int 	MAX_WORD_CT = MAX_TWEET_LEN/2 + 1;
 							
-		RunningMedian(const std::string& ft2, long int num_bytes);
+		RunningMedian(const std::string& ft2);
 		
 		/*
 			UpdateMedian(): Calls UpdateMedian(...) for each element in word_cts.
@@ -33,9 +33,10 @@ class RunningMedian
 		void UpdateMedian(const std::vector<uchar>& word_cts);
 		
 		/*
-			Write(): Writes the data for feature 2 to file.
+			Write(): Writes/appends the data for feature 2 to file, then flushes the buffer
+			Modifies: _medianTimes2
 		*/
-		void Write() const;
+		void Write();
 		
 	private:
 		/*

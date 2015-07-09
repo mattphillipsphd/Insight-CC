@@ -11,8 +11,12 @@ TweetWords::TweetWords(const std::string& input_file, const std::string& ft1, in
 	}
 	_numBytes = ifs.tellg();
 	ifs.close();
-		
-	InitThreads(max_threads);
+	
+	_numThreads = (_numBytes > 4096 && std::thread::hardware_concurrency()>0)
+					? std::thread::hardware_concurrency()
+					: 1;
+	if (max_threads>0) _numThreads = std::min(_numThreads, max_threads);
+	std::cout << "Using " << _numThreads << " thread(s) to create dictionary." << std::endl;
 }
 
 int TweetWords::AddTweet(const Tweet& tweet)
@@ -21,6 +25,32 @@ int TweetWords::AddTweet(const Tweet& tweet)
 	std::multiset<std::string>&& words = tweet.Words(unique_ct);
 	UpdateWordCount(words);
 	return unique_ct;
+}
+
+//We divide the file length into as many contiguous pieces as there are threads,
+//and then prepare each thread to read just from its segment.  The results
+//are collected in _countSet
+long int TweetWords::InitThreads(long int bstart, long int chunk_num)
+{
+	_thdStarts = std::vector<std::streampos>(_numThreads+1);
+	_thdStarts[0] = bstart;
+	
+	const long int last_byte = std::min(bstart+MAX_CHUNK_SIZE, _numBytes) - 1, 
+					bytes_per_thread = (last_byte - bstart) / (long int)_numThreads;
+	std::ifstream in(_inputFile.c_str(), std::ifstream::in);
+	for (long int i=1; i<_numThreads+1; ++i)
+	{
+		std::streampos offset = bstart + i*bytes_per_thread;
+		in.seekg(offset, std::ios_base::beg);
+		char c;
+		do 
+			in.get(c);
+		while ( c != '\n' && in.good()) ;
+		_thdStarts[i] = in.tellg();
+	}
+	in.close();
+	
+	return (long int)_thdStarts.at(_numThreads);
 }
 
 void TweetWords::ReadTweets()
@@ -63,36 +93,6 @@ void TweetWords::Write() const
 		out << *it << " " << std::setw(num_spaces) << _words.count(*it) << std::endl;
 	}
 	out.close();
-}
-
-//We divide the file length into as many contiguous pieces as there are threads,
-//and then prepare each thread to read just from its segment.  The results
-//are collected in _countSet
-void TweetWords::InitThreads(int max_threads)
-{
-	_numThreads = (_numBytes > 4096 && std::thread::hardware_concurrency()>0)
-					? std::thread::hardware_concurrency()
-					: 1;
-	if (max_threads>0) _numThreads = std::min(_numThreads, max_threads);
-	std::cout << "Using " << _numThreads << " thread(s) to create dictionary." << std::endl;
-
-	_thdStarts = std::vector<std::streampos>(_numThreads+1);
-	_thdStarts[0] = 0;
-	_thdStarts[_numThreads] = _numBytes;
-	
-	const int bytes_per_thread = _numBytes / _numThreads;
-	std::ifstream in(_inputFile.c_str(), std::ifstream::in);
-	for (int i=1; i<_numThreads; ++i)
-	{
-		std::streampos offset = i*bytes_per_thread;
-		in.seekg(offset, std::ios_base::beg);
-		char c;
-		do 
-			in.get(c);
-		while ( c != '\n' ) ;
-		_thdStarts[i] = in.tellg();
-	}
-	in.close();
 }
 
 void TweetWords::ReadTweetsT(int tnum, std::streampos start, std::streampos end)

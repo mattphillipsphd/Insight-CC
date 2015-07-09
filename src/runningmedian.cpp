@@ -1,29 +1,36 @@
 #include "runningmedian.h"
 
-RunningMedian::RunningMedian(const std::string& ft2, long int num_bytes) 
+RunningMedian::RunningMedian(const std::string& ft2) 
 	: _ft2(ft2), _groupIdx(-1), _medianIdx(-1)
 {
 	memset(_freqCts, 0, sizeof(int)*MAX_WORD_CT);
-	_medianTimes2.reserve(num_bytes / TweetWords::AVG_WORDS_PER_TWEET);
+	_medianTimes2.reserve(MAX_CHUNK_SIZE / TweetWords::AVG_WORDS_PER_TWEET);
+	
+	std::ofstream out_ft2(_ft2, std::ofstream::out | std::ofstream::trunc);
+	out_ft2.close();
 }
 
 void RunningMedian::UpdateMedian(const std::vector<uchar>& word_cts)
 {
-	const int vec_size = word_cts.size();
-	for (int i=0; i<vec_size; ++i)
+	const int word_cts_size = word_cts.size();
+	for (int i=0; i<word_cts_size; ++i)
 	{
-		++_freqCts[ word_cts.at(i) ];
-		UpdateMedian( word_cts.at(i) );
+		++_freqCts[ word_cts[i] ];
+		UpdateMedian( word_cts[i] );
 	}
 }
 
-void RunningMedian::Write() const
+void RunningMedian::Write()
 {
-	std::ofstream out(_ft2, std::ofstream::out);
+	std::ofstream out(_ft2, std::ofstream::out | std::ofstream::app);
 	const int num_current_tweets = _medianTimes2.size();
+	out.precision(2);
+	out << std::fixed;
 	for (int i=0; i<num_current_tweets; ++i)
 		out << (float)_medianTimes2[i] / 2.0f << std::endl;
 	out.close();
+	
+	_medianTimes2.clear();
 }
 
 /*
@@ -61,7 +68,7 @@ void RunningMedian::Write() const
 */
 void RunningMedian::UpdateMedian(int word_ct)
 {
-	if (_medianTimes2.empty())
+	if (_medianIdx == -1)
 	{
 		_medianIdx = word_ct;
 		_medianTimes2.push_back( _medianIdx*2 );

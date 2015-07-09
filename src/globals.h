@@ -26,4 +26,6 @@ typedef std::chrono::milliseconds		TimeT;
 
 #define MAX_TWEET_LEN			140
 
+const long int MAX_CHUNK_SIZE = 1<<32;
+
 #endif //GLOBALS_H

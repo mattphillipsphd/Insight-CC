@@ -43,6 +43,13 @@ class TweetWords
 			Calls: ReadTweetsT
 		*/
 		void ReadTweets();
+			
+		/*
+			InitThreads: Sets up the threads and associated file locations for parallel
+			processing of the input file.
+			Modifies: _countSet, _numThreads, _threadsLeft, _thdStarts
+		*/
+		long int InitThreads(long int bstart, long int bend);
 		
 		long int NumBytes() const { return _numBytes; }
 		
@@ -57,14 +64,6 @@ class TweetWords
 		void Write() const;
 		
 	private:
-		static const int MS_THREAD_WAIT = 500;
-			
-		/*
-			InitThreads: Sets up the threads and associated file locations for parallel
-			processing of the input file.
-			Modifies: _countSet, _numThreads, _threadsLeft, _thdStarts
-		*/
-		inline void InitThreads(int max_threads);
 		
 		/*
 			ReadTweetsT: For a given segment of the input file, this function reads
