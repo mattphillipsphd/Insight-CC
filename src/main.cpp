@@ -49,42 +49,27 @@ int main(int argc, char* argv[])
 		if (num_chunks>1) std::cout << "Starting chunk " << i+1 << " of " << num_chunks << "..." << std::endl;
 		
 		//Feature 1
-		auto t0 = std::chrono::system_clock::now();
 		bstart = tweet_words.InitThreads(bstart);
 			//We determine the start and end point within the file for each chunk, and for the
 			//threads within the chunk.
 		
-		tweet_words.ReadTweets(); //This creates the dictionary.
-		auto t1 = std::chrono::system_clock::now();
-		std::cout 	<< "Creating dictionary: "
-					<<std::chrono::duration_cast<TimeT>(t1-t0).count() << "ms." << std::endl;
+		tweet_words.ReadTweets(); 
+			//This creates the dictionary.
+					
 					
 		//Feature 2
 		std::vector<uchar>&& unique_cts = tweet_words.UniqueCts();
 		rmed.UpdateMedian(unique_cts);
 			//We get the unique word counts from tweet_words and calculate the running median.
-		auto t2 = std::chrono::system_clock::now();
-		std::cout 	<< "Calculating median: "
-					<< std::chrono::duration_cast<TimeT>(t2-t1).count() << "ms." << std::endl;
 					
 		rmed.Write();
 			//Write feature 2 to disk.
-		auto t3 = std::chrono::system_clock::now();
-		std::cout 	<< "Writing ft2.txt: "
-					<< std::chrono::duration_cast<TimeT>(t3-t2).count() << "ms." << std::endl;
 
 		if (num_chunks>1) std::cout << "Finished chunk " << i+1 << " of " << num_chunks << ".\n" << std::endl;
 	}
 	
-	auto t4 = std::chrono::system_clock::now();
 	tweet_words.Write();
 		//Write feature 1 to disk.
-	auto t5 = std::chrono::system_clock::now();
-	std::cout 	<< "Writing ft1.txt: " 
-				<< std::chrono::duration_cast<TimeT>(t5-t4).count() << "ms." << std::endl;
-
-	std::cout 	<< "Total time: "
-				<< std::chrono::duration_cast<TimeT>(t5-start).count() << "ms." << std::endl;
 				
 	return 0;
 }
