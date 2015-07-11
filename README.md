@@ -22,3 +22,5 @@ mattphillipsphd@yahoo.com
 	In addition, this program makes substantial use of C++11 language features and data structures
 	(move semantics, multisets, et al.) for maximum efficiency.  The most time is spent writing 
 	the results to disk.  I experimented with file buffer size but could not improve on C++ defaults.
+
+	tweet_input/tweets.txt contains an example of the sort of input file I used to test the program.
