@@ -3,9 +3,9 @@
 
 /*
 	For convenience STL header files are included in a single global file
-	instead off_type the individual files (tweet.h, summary.h), since it is
-	unlikely one will change without the others changing (e.g., when a new 
-	version of the libraries are installed.
+	instead of the individual files (tweet.h, tweetwords.h, runningmedian.h), 
+	since it is	unlikely one will change without the others changing (e.g., 
+	when a new version of the libraries are installed).
 */
 
 #include <algorithm>

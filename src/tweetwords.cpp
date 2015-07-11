@@ -91,6 +91,11 @@ std::vector<uchar> TweetWords::UniqueCts() const
 void TweetWords::Write() const
 {
 	std::ofstream out(_ft1, std::ofstream::out);
+	if (!out.good())
+	{
+		std::cerr << "Bad file name, \"" << _ft1 << "\"" << std::endl;
+		exit(-1);
+	}
 	
 	const int padding = 64;
 	auto words_cend = _words.cend();

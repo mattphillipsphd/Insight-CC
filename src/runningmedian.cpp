@@ -7,16 +7,20 @@ RunningMedian::RunningMedian(const std::string& ft2)
 	_medianTimes2.reserve(MAX_CHUNK_SIZE / TweetWords::AVG_WORDS_PER_TWEET);
 	
 	std::ofstream out_ft2(_ft2, std::ofstream::out | std::ofstream::trunc);
+	if (!out_ft2.good())
+	{
+		std::cerr << "Bad file name, \"" << _ft2 << "\"" << std::endl;
+		exit(-1);
+	}
 	out_ft2.close();
 }
 
 void RunningMedian::UpdateMedian(const std::vector<uchar>& word_cts)
 {
-	const int word_cts_size = word_cts.size();
-	for (int i=0; i<word_cts_size; ++i)
+	for (auto it : word_cts)
 	{
-		++_freqCts[ word_cts[i] ];
-		UpdateMedian( word_cts[i] );
+		++_freqCts[it];
+		UpdateMedian(it);
 	}
 }
 
@@ -65,6 +69,12 @@ void RunningMedian::Write()
 	when the input count is even and the median is the average of two bin values.  In this case,
 	the median index will point to the lower of these two values, and the algorithm will calculate
 	the median as the average.
+	
+	Note: A further refinement would be to exploit the fact that the median tends to shift
+	only gradually for large N and do a limited number of tests when it is known in advance
+	that the next k word counts will not shift the median.  However testing of this idea
+	showed a modest improvement (20%) even for very large (10M) sets of values so I have left
+	this out for simplicity.
 */
 void RunningMedian::UpdateMedian(int word_ct)
 {

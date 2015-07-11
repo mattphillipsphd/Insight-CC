@@ -15,17 +15,17 @@ class Tweet
 {
 	public:
 		/*
-			Tweet(): Our constructor requires an xvalue, since the only purpose for	
-			reading a line from tweets.txt is to convert it immediately into 
-			a Tweet object. 
+		Tweet(): Our constructor requires an xvalue, since the only purpose for	
+		reading a line from tweets.txt is to convert it immediately into 
+		a Tweet object. 
 		*/
 		explicit Tweet(const std::string&& text);
 		
 		/*
-			Words(): Returns a set of the words in the tweet, which by 
-			definition of std::multiset, will alphabetize them.
-				Note that Words *ignores* sequential whitespace.  It will 
-			not return a set with empty words.
+		Words(): Returns a set of the words in the tweet, which by 
+		definition of std::multiset, will alphabetize them.
+			Note that Words *ignores* sequential whitespace.  It will 
+		not return a set with empty words.
 		*/
 		std::multiset<std::string> Words(int& unique_ct) const;
 		

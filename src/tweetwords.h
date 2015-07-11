@@ -27,56 +27,54 @@ class TweetWords
 		TweetWords(const std::string& input_file, const std::string& ft1, int max_threads = -1);
 		
 		/*
-			AddTweet(): Processes a tweet.  It calls Tweet::UniqueWords 
-			and updates the count for each word, as well as the running 
-			median, and appends the running median data to file 
-			if ARRAY_MAX has been reached.
-			Modifies: 	_freqCts, _tweetCount
-			Calls:		UpdateWordCount
+		AddTweet(): Processes a tweet.  It calls Tweet::UniqueWords to get the
+		unique word count, which it returns as an integer.  It also calls UpdateWordCount
+		to update the dictionary.		
+		Calls:		UpdateWordCount
 		*/
 		int AddTweet(const Tweet& tweet);
 		
 		/*
-			ReadTweets(): Launches as many threads as recommended by the OS, then waits until
-			they are all finished.
-			Modifies: _countSet, _threadsLeft
-			Calls: ReadTweetsT
+		ReadTweets(): Launches the threads which process the tweets and update the dictionary,
+		then it waits until they are all finished.
+		Modifies: _countSet
+		Calls: ReadTweetsT
 		*/
 		void ReadTweets();
 			
 		/*
-			InitThreads: Sets up the threads and associated file locations for parallel
-			processing of the input file.
-			Modifies: _countSet, _numThreads, _threadsLeft, _thdStarts
+		InitThreads(): Sets up the threads and associated file locations for parallel
+		processing of the input file.
+		Modifies: _countSet, _numThreads, _thdStarts
 		*/
 		long int InitThreads(long int bstart);
 		
 		long int NumBytes() const { return _numBytes; }
 		
 		/*
-			Return a vector containing the number of unique words for every tweet processed.
+		UniqueCts(): Return a vector containing the number of unique words for every tweet processed.
 		*/
 		std::vector<uchar> UniqueCts() const;
 		
 		/*
-			Write the data for feature 1 to file.
+		Write(): Write the data for feature 1 to file.
 		*/
 		void Write() const;
 		
 	private:
 		
 		/*
-			ReadTweetsT: For a given segment of the input file, this function reads
-			in and processes the tweets, putting the vector of unique word counts into _countSet.
-			Modifies: _countSet
-			Calls: _DecThreadCt
+		ReadTweetsT(): For a given segment of the input file, this function reads
+		in and processes the tweets, putting the vector of unique word counts into _countSet.
+		Modifies: _countSet
+		Calls: AddTweet
 		*/
 		inline void ReadTweetsT(int tnum, std::streampos start, std::streampos end);
 		
 		/*
-			UpdateWordCount(): Updates count of each word using the word list
-			from Tweet::UniqueWords.  Mutex-protected.
-			Modifies: _words
+		UpdateWordCount(): Updates count of each word using the word list
+		from Tweet::UniqueWords.  Mutex-protected.
+		Modifies: _words
 		*/
 		inline void UpdateWordCount(const std::multiset<std::string>& words);
 	

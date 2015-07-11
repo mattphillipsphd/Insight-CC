@@ -11,7 +11,7 @@
 		The size of the file chunk is controlled with MAX_CHUNK_SIZE in globals.h.
 		
 	2) The running median is calculated by updating a few indexes (see runningmedian.cpp for details)
-		and so has complexity O(N) with input length as opposed to O(N*log(N)) or worse for a naive 
+		and so has complexity O(N) with input length, as opposed to O(N*log(N)) or worse for a naive 
 		implementation.
 		
 	3) The calculation of words tweeted (feature 1) is in principle implemented in a multi-threaded
@@ -23,9 +23,12 @@
 	(move semantics, multisets, et al.) for maximum efficiency.  The most time is spent writing 
 	the results to disk.  I experimented with file buffer size but could not improve on C++ defaults.
 	
-	Class TweetWords implements feature 1; class RunningMedian implements feature 2.  Class Tweet
-	encapsulates a single tweet.  Its functionality could be absorbed by TweetWords but for scalability
-	reasons, since it is such a central concept, it seems like a good idea to give it its own class.
+	Classes:
+	TweetWords: 	Implements feature 1.
+	Tweet: 			Encapsulates a single tweet.  Its functionality could be absorbed by 
+					TweetWords but for scalability reasons, since it is such a central concept, 
+					it seems like a good idea to give it its own class. 
+	RunningMedian: 	Implements feature 2.   
 */
 
 int main(int argc, char* argv[])
@@ -35,13 +38,16 @@ int main(int argc, char* argv[])
 		: std::string(argv[1]);
 	const int max_threads = (argc<3) ? -1 : std::atoi(argv[2]);
 	
+	const std::string 	ft1 = "tweet_output/ft1.txt",
+						ft2 = "tweet_output/ft2.txt";
+	
 	auto start = std::chrono::system_clock::now();
-	TweetWords tweet_words(file_name, "tweet_output/ft1.txt", max_threads);
+	TweetWords tweet_words(file_name, ft1, max_threads);
 	long int num_bytes = tweet_words.NumBytes();
 	const int num_chunks = num_bytes / MAX_CHUNK_SIZE + 1;
 		//The number of file chunks is determined by file size in bytes and the MAX_CHUNK_SIZE value.
 
-	RunningMedian rmed("tweet_output/ft2.txt");
+	RunningMedian rmed(ft2);
 	
 	long int bstart = 0;
 	for (long int i=0; i<num_chunks; ++i)
@@ -70,6 +76,8 @@ int main(int argc, char* argv[])
 	
 	tweet_words.Write();
 		//Write feature 1 to disk.
+		
+	std::cout << "Program completed. Data written to " << ft1 << " and " << ft2 << "." << std::endl;
 				
 	return 0;
 }
