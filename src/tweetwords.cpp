@@ -19,14 +19,6 @@ TweetWords::TweetWords(const std::string& input_file, const std::string& ft1, in
 	std::cout << "Using " << _numThreads << " thread(s) to create dictionary." << std::endl;
 }
 
-int TweetWords::AddTweet(const Tweet& tweet)
-{
-	int unique_ct;
-	std::multiset<std::string>&& words = tweet.Words(unique_ct);
-	UpdateWordCount(words);
-	return unique_ct;
-}
-
 //We divide the current file chunk into as many contiguous pieces as there are threads,
 //and then prepare each thread to read just from its segment.  The results
 //are fed into the dictionary, _words, using the mutex-protected function UpdateWordCount.
@@ -49,9 +41,9 @@ long int TweetWords::InitThreads(long int bstart)
 		//the start of the next one.
 		char c;
 		do 
-			in.get(c);
-		while ( c != '\n' && c != EOF) ;
-		_thdStarts[i] = in.tellg();
+			c = in.get();
+		while ( c != '\n' && !in.eof()) ;
+		_thdStarts[i] = in.eof() ? std::streampos(_numBytes) : in.tellg();
 	}
 	in.close();
 		
@@ -62,8 +54,10 @@ long int TweetWords::InitThreads(long int bstart)
 
 void TweetWords::ReadTweets()
 {
+	//Initialize the variable that will hold the vector of counts for each thread
 	_countSet = std::vector< std::vector<uchar> >(_numThreads);
 
+	//Launch each thread, which reads from a particular segment of the input file
 	std::vector<std::thread> tvec;
 	for (int i=0; i<_numThreads; ++i)
 		tvec.emplace_back( 
@@ -71,6 +65,7 @@ void TweetWords::ReadTweets()
 							this, i, _thdStarts.at(i), _thdStarts.at(i+1) - std::streampos(1)
 						);
 	
+	//Wait for all threads to complete
 	for (auto& it : tvec)
 		it.join();
 }
@@ -82,6 +77,8 @@ std::vector<uchar> TweetWords::UniqueCts() const
 	std::vector<uchar> unique_cts;
 	unique_cts.reserve(num_tweets);
 	
+	//The vectors of counts for each thread are concatenated and returned
+	//in a single vector.
 	for (const auto& it : _countSet)
 		unique_cts.insert(unique_cts.end(), it.cbegin(), it.cend());
 	
@@ -97,38 +94,72 @@ void TweetWords::Write() const
 		exit(-1);
 	}
 	
-	const int padding = 64;
 	auto words_cend = _words.cend();
-	for (auto it=_words.cbegin(); it!=words_cend; it=_words.upper_bound(*it))
-	{
-		const int num_spaces = padding - it->length();
-		out << *it << " " << std::setw(num_spaces) << _words.count(*it) << std::endl;
-	}
+	for (auto it = _words.cbegin(); it != words_cend; ++it)
+		out << it->first << '\t' << it->second << '\n';
+		//Printing the formatting (so that the column of numbers is aligned) is actually
+		//pretty time-consuming so we simply tab-separate the data.
 	out.close();
 }
 
 //We move to the start of the file segment assigned to this thread, and read
-//tweets until we reach the end.  Word counts are deposited in _words and _countSet.
+//tweets until we reach the end.  Words are added to the dictionary, _words, and the unique
+//count for each tweet is added to _countSet
 void TweetWords::ReadTweetsT(int tnum, std::streampos start, std::streampos end)
 {
-	std::ifstream in(_inputFile.c_str(), std::ifstream::in);
-	in.seekg(start, std::ios_base::beg);
+	//We use C file-handling here, as tokenization proved to be fastest using strtok,
+	//as compared to C++ tokenization (find_first_of) or boost::tokenizer.
+	FILE* fp = fopen(_inputFile.c_str(), "r");
+	fseek(fp, (long int)start, SEEK_SET);
+	
 	std::vector<uchar> cts;
-	cts.reserve( (int)(end - start) / AVG_WORDS_PER_TWEET );
-	std::string line;
-	while (in.tellg() < end && !in.eof())
+	cts.reserve( (int)(end - start) / AVG_CHARS_PER_TWEET );
+		//cts will hold all the unique counts for each file segment
+	
+	const char whitespace[] = " \t\v\r\f\n"; 
+		//See http://en.cppreference.com/w/cpp/string/byte/isspace.  \v and \f are
+		//probably overkill but I don't know the twitter API guarantees.
+
+	std::unordered_map<std::string, int> tweet_words;
+		//We use an unordered_map to hold the words for each tweet because 
+		//a) it has fast insertion, b) we don't care about order, and c) the number
+		//of unique elements is held by the size.
+	
+	char line[MAX_TWEET_LEN];
+	while (ftell(fp) < (long int)end && !feof(fp))
 	{
-		std::getline(in, line);
-		int ct = AddTweet( Tweet( std::move(line) ) );
-		cts.push_back(ct);
+		//Get the next line of text, clear the unordered_set
+		fgets(line, MAX_TWEET_LEN, fp);
+		tweet_words.clear();
+	
+		// We simply take each word from the tweet and insert it into the set.
+		char* tok = strtok(line, whitespace);
+		while (tok)
+		{
+			if (strlen(tok)>0) ++tweet_words[tok];
+				//If the word isn't present in the dictionary, its count is initialized with
+				//int() = 0; then its count is incremented.
+			tok = strtok(NULL, whitespace);		
+		}
+		
+		//Update the dictionary with all the words from this tweet
+		UpdateWordCount(tweet_words);
+	
+		//Insert the count of unique words
+		cts.push_back( tweet_words.size() ); 
 	}
-	in.close();
+
+	fclose(fp);
 	_countSet[tnum] = cts;
 }
 
-void TweetWords::UpdateWordCount(const std::multiset<std::string>& tweet_words)
+void TweetWords::UpdateWordCount(const std::unordered_map<std::string, int>& tweet_words)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	_words.insert(tweet_words.cbegin(), tweet_words.cend());
+	auto words_cend = tweet_words.cend();
+	for (auto it = tweet_words.cbegin(); it != words_cend; ++it)
+		_words[it->first] += it->second;
+			//If the word isn't present in the dictionary, its count is initialized with
+			//int() = 0; then its count is increased.
 }
 

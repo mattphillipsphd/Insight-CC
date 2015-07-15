@@ -2,19 +2,16 @@
 #define TWEETWORDS_H
 
 #include "globals.h"
-#include "tweet.h"
 
 /*
 	Class TweetWords
 	This class performs all computations regarding calculating word occurrence
-	frequency (feature 1).  Summary::AddTweet
-	processes each tweet in turn.
+	frequency (feature 1).  
 	
 	The implementation of feature 1 is very straightforward.  Words from the
 	current tweet are retrieved using Tweet::UniqueWords and inserted into a
-	std::multiset, _words.  The implementation of std::multiset keeps track
-	of the number of repeats so it is an ideal data structure for representing frequency.
-	For potentail speed increase, we use multiple threads to read
+	std::map<std::string,int>, _words, which maps each word onto its frequency count.  
+	For potential speed increase, we use multiple threads to read
 	in and process tweets.  However testing did not reveal a consistent improvement
 	so we have left the default to be single-threaded, with multiple threads 
 	specifiable as an argument to the main program.
@@ -22,17 +19,10 @@
 class TweetWords
 {
 	public:
-		static const int AVG_WORDS_PER_TWEET = 10; //According to OxfordWords, rounding down
+		static const int 	AVG_CHARS_PER_TWEET = 60, //According to the internet
+							AVG_WORDS_PER_TWEET = 10; //According to OxfordWords, rounding down
 		
 		TweetWords(const std::string& input_file, const std::string& ft1, int max_threads = -1);
-		
-		/*
-		AddTweet(): Processes a tweet.  It calls Tweet::UniqueWords to get the
-		unique word count, which it returns as an integer.  It also calls UpdateWordCount
-		to update the dictionary.		
-		Calls:		UpdateWordCount
-		*/
-		int AddTweet(const Tweet& tweet);
 		
 		/*
 		ReadTweets(): Launches the threads which process the tweets and update the dictionary,
@@ -65,18 +55,18 @@ class TweetWords
 		
 		/*
 		ReadTweetsT(): For a given segment of the input file, this function reads
-		in and processes the tweets, putting the vector of unique word counts into _countSet.
+		in and processes the tweets, updating the dictionary and 
+		putting the vector of unique word counts into _countSet.
 		Modifies: _countSet
-		Calls: AddTweet
+		Calls: UpdateWordCount
 		*/
 		inline void ReadTweetsT(int tnum, std::streampos start, std::streampos end);
 		
 		/*
-		UpdateWordCount(): Updates count of each word using the word list
-		from Tweet::UniqueWords.  Mutex-protected.
+		UpdateWordCount(): Updates count of each word.  Mutex-protected.
 		Modifies: _words
 		*/
-		inline void UpdateWordCount(const std::multiset<std::string>& words);
+		inline void UpdateWordCount(const std::unordered_map<std::string, int>& words);
 	
 		//_countSet: A vector of vectors for collecting the results from the multi-threaded
 		//read-in.
@@ -94,9 +84,8 @@ class TweetWords
 		int _numThreads;
 		std::vector<std::streampos> _thdStarts;
 	
-		//_words: Stores the unique words from all tweets and their frequencies,
-		//the latter of which are accessed with std::multiset::count.
-		std::multiset<std::string> _words;
+		//_words: Stores the unique words from all tweets and their frequencies.
+		std::map<std::string, int> _words;
 };
 
 #endif //TWEETWORDS_H

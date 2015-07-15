@@ -31,7 +31,7 @@ void RunningMedian::Write()
 	out.precision(2); //As specified in the FAQ
 	out << std::fixed;
 	for (int i=0; i<num_current_tweets; ++i)
-		out << (float)_medianTimes2[i] / 2.0f << std::endl;
+		out << (float)_medianTimes2[i] / 2.0f << '\n';
 	out.close();
 	
 	_medianTimes2.clear();

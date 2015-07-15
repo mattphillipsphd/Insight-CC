@@ -8,13 +8,13 @@ if [[ $OSTYPE == "linux-gnu" ]]; then
 	TARGET=tweet_digest
 	if [ ! -e $TARGET ]; then
 		g++ -std=c++11 -pthread \
-				src/main.cpp src/tweet.cpp src/runningmedian.cpp src/tweetwords.cpp \
+				src/main.cpp src/runningmedian.cpp src/tweetwords.cpp \
 				-o $TARGET
 	fi
 else
 	TARGET=tweet_digest.exe
 	if [ ! -e $TARGET ]; then
-		g++ -std=c++11 src/main.cpp src/tweet.cpp src/runningmedian.cpp src/tweetwords.cpp \
+		g++ -std=c++11 src/main.cpp src/runningmedian.cpp src/tweetwords.cpp \
 				-o $TARGET
 	fi
 fi

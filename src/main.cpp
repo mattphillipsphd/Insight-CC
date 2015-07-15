@@ -20,14 +20,11 @@
 		to the number of cores.
 		
 	In addition, this program makes substantial use of C++11 language features and data structures
-	(move semantics, multisets, et al.) for maximum efficiency.  The most time is spent writing 
-	the results to disk.  I experimented with file buffer size but could not improve on C++ defaults.
+	(move semantics, unordered_map, et al.) for maximum efficiency.  On my ASUS laptop (c. 2013) it
+	processes 1M tweets in less than a minute.
 	
 	Classes:
 	TweetWords: 	Implements feature 1.
-	Tweet: 			Encapsulates a single tweet.  Its functionality could be absorbed by 
-					TweetWords but for scalability reasons, since it is such a central concept, 
-					it seems like a good idea to give it its own class. 
 	RunningMedian: 	Implements feature 2.   
 */
 
@@ -41,7 +38,6 @@ int main(int argc, char* argv[])
 	const std::string 	ft1 = "tweet_output/ft1.txt",
 						ft2 = "tweet_output/ft2.txt";
 	
-	auto start = std::chrono::system_clock::now();
 	TweetWords tweet_words(file_name, ft1, max_threads);
 	long int num_bytes = tweet_words.NumBytes();
 	const int num_chunks = num_bytes / MAX_CHUNK_SIZE + 1;
@@ -59,9 +55,7 @@ int main(int argc, char* argv[])
 			//We determine the start and end point within the file for each chunk, and for the
 			//threads within the chunk.
 		
-		tweet_words.ReadTweets(); 
-			//This creates the dictionary.
-					
+		tweet_words.ReadTweets(); //This creates the dictionary.
 					
 		//Feature 2
 		std::vector<uchar>&& unique_cts = tweet_words.UniqueCts();
@@ -76,8 +70,5 @@ int main(int argc, char* argv[])
 	
 	tweet_words.Write();
 		//Write feature 1 to disk.
-		
-	std::cout << "Program completed. Data written to " << ft1 << " and " << ft2 << "." << std::endl;
-				
 	return 0;
 }

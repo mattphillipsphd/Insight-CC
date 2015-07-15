@@ -3,13 +3,12 @@
 
 /*
 	For convenience STL header files are included in a single global file
-	instead of the individual files (tweet.h, tweetwords.h, runningmedian.h), 
+	instead of the individual files (tweetwords.h, runningmedian.h), 
 	since it is	unlikely one will change without the others changing (e.g., 
 	when a new version of the libraries are installed).
 */
 
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <climits>
 #include <cstring>
@@ -18,8 +17,8 @@
 #include <iostream>
 #include <map>
 #include <mutex>
-#include <set>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 typedef unsigned char					uchar;
