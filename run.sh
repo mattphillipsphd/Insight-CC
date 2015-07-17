@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 INPUT_FN="tweet_input/tweets.txt"
-MAX_THREADS=1
-#Testing indicated that multiple threads do not lead to improvement on my machine.
+MAX_THREADS=16
 
 if [[ $OSTYPE == "linux-gnu" ]]; then
 	TARGET=tweet_digest

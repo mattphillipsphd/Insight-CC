@@ -16,6 +16,7 @@
 	so we have left the default to be single-threaded, with multiple threads 
 	specifiable as an argument to the main program.
 */
+typedef std::map<std::string,int>		Dictionary;
 class TweetWords
 {
 	public:
@@ -60,22 +61,14 @@ class TweetWords
 		Modifies: _countSet
 		Calls: UpdateWordCount
 		*/
-		inline void ReadTweetsT(int tnum, std::streampos start, std::streampos end);
-		
-		/*
-		UpdateWordCount(): Updates count of each word.  Mutex-protected.
-		Modifies: _words
-		*/
-		inline void UpdateWordCount(const std::unordered_map<std::string, int>& words);
-	
+		inline void ReadTweetsT(int tnum);
+			
 		//_countSet: A vector of vectors for collecting the results from the multi-threaded
 		//read-in.
-		std::vector< std::vector<uchar> > _countSet;
+		std::vector<uchar> _counts;
 		
 		//_ft1, _ft2: Strings containing the input and output filenames respectively.
 		const std::string _inputFile, _ft1;
-		
-		std::mutex _mutex;
 		
 		//_numBytes: Number of bytes in the file
 		long int _numBytes;
@@ -85,7 +78,7 @@ class TweetWords
 		std::vector<std::streampos> _thdStarts;
 	
 		//_words: Stores the unique words from all tweets and their frequencies.
-		std::map<std::string, int> _words;
+		std::vector<Dictionary> _dicts;
 };
 
 #endif //TWEETWORDS_H
