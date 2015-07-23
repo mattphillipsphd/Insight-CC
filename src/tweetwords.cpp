@@ -3,12 +3,13 @@
 TweetWords::TweetWords(const std::string& input_file, const std::string& ft1, int user_max_threads)
 	: _inputFile(input_file), _ft1(ft1)
 {
-	FILE* fp = fopen(_inputFile.c_str(), "ab+");
+	FILE* fp = fopen(_inputFile.c_str(), "r");
 	if (!fp)
 	{
 		std::cerr << "Bad file name, \"" << _inputFile << "\"" << std::endl;
 		exit(-1);
 	}
+	fseek(fp, 0, SEEK_END);
 	_numBytes = ftell(fp);
 	fclose(fp);
 	
@@ -140,7 +141,7 @@ void TweetWords::ReadTweetsT(int tnum)
 	const int tscale = num_slots / _numThreads;
 #endif
 
-	//We avoid potentially millions of member access operations
+	//We avoid potentially millions of member access operations by taking a reference
 	Dictionary& dict = _dicts[tnum];  
 		
 	std::unordered_set<std::string> tweet_words;

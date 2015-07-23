@@ -34,7 +34,8 @@
 typedef unsigned char					uchar;
 typedef std::chrono::milliseconds		TimeT;
 
-#define MAX_TWEET_LEN					140
+#define MAX_TWEET_LEN					256
+//Adding some extra space for multi-char translations that occur in the file, like &gt;
 
 const long int MAX_CHUNK_SIZE = INT_MAX;
 
