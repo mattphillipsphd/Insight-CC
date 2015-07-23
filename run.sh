@@ -1,22 +1,9 @@
-#!/usr/bin/env bash
 
-INPUT_FN="tweet_input/tweets.txt"
-MAX_THREADS=16
+#If running this on a platform (Windows) without pthread support, comment out the compiler 
+#command below and uncomment the one beneath it.
+g++ -std=c++11 -pthread src/main.cpp src/runningmedian.cpp src/tweetwords.cpp -o tweet_digest
+#g++ -std=c++11 src/main.cpp src/runningmedian.cpp src/tweetwords.cpp -o tweet_digest
 
-if [[ $OSTYPE == "linux-gnu" ]]; then
-	TARGET=tweet_digest
-	if [ ! -e $TARGET ]; then
-		g++ -std=c++11 -pthread \
-				src/main.cpp src/runningmedian.cpp src/tweetwords.cpp \
-				-o $TARGET
-	fi
-else
-	TARGET=tweet_digest.exe
-	if [ ! -e $TARGET ]; then
-		g++ -std=c++11 src/main.cpp src/runningmedian.cpp src/tweetwords.cpp \
-				-o $TARGET
-	fi
-fi
-#Note, the -O3 compiler option does not measurably improve speed, tested on Windows
+#Note, the -O2, -O3 compiler options do not measurably improve speed on either Windows or Linux
 
-./$TARGET $INPUT_FN $MAX_THREADS
+./tweet_digest

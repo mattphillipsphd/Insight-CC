@@ -6,13 +6,13 @@ RunningMedian::RunningMedian(const std::string& ft2)
 	memset(_freqCts, 0, sizeof(int)*MAX_WORD_CT);
 	_medianTimes2.reserve(MAX_CHUNK_SIZE / TweetWords::AVG_WORDS_PER_TWEET);
 	
-	std::ofstream out_ft2(_ft2, std::ofstream::out | std::ofstream::trunc);
-	if (!out_ft2.good())
+	FILE* fp = fopen(_ft2.c_str(), "w");
+	if (!fp)
 	{
 		std::cerr << "Bad file name, \"" << _ft2 << "\"" << std::endl;
 		exit(-1);
 	}
-	out_ft2.close();
+	fclose(fp);
 }
 
 void RunningMedian::UpdateMedian(const std::vector<uchar>& word_cts)
@@ -26,13 +26,11 @@ void RunningMedian::UpdateMedian(const std::vector<uchar>& word_cts)
 
 void RunningMedian::Write()
 {
-	std::ofstream out(_ft2, std::ofstream::out | std::ofstream::app);
 	const int num_current_tweets = _medianTimes2.size();
-	out.precision(1); //As specified in the FAQ
-	out << std::fixed;
+	FILE* fp = fopen(_ft2.c_str(), "a");
 	for (int i=0; i<num_current_tweets; ++i)
-		out << (float)_medianTimes2[i] / 2.0f << '\n';
-	out.close();
+		fprintf(fp, "%0.1f\n", (float)_medianTimes2[i] / 2.0f);
+	fclose(fp);
 	
 	_medianTimes2.clear();
 }

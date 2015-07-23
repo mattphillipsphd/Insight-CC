@@ -8,22 +8,28 @@
 	This class performs all computations regarding calculating word occurrence
 	frequency (feature 1).  
 	
-	The implementation of feature 1 is very straightforward.  Words from the
-	current tweet are retrieved using Tweet::UniqueWords and inserted into a
-	std::map<std::string,int>, _words, which maps each word onto its frequency count.  
-	For potential speed increase, we use multiple threads to read
-	in and process tweets.  However testing did not reveal a consistent improvement
-	so we have left the default to be single-threaded, with multiple threads 
-	specifiable as an argument to the main program.
+	For Windows systems, the implementation is straightforward; the input file is read
+	line by line, each tweet is extracted and tokenized using C strtok and the individual
+	words are fed into the dictionary (a std::map from strings to frequency counts), which
+	is subsequently written to disk.
+		For UNIX-based systems, I was able to achieve substantially faster (2x) performance
+	by creating multiple threads and creating a dictionary for each thread which only comprises
+	a fraction of the ASCII range.  Each thread reads the *entire* file, but only updates its
+	dictionary when a word in its alphabetical range is read.  This method increases CPU usage
+	and code complexity but avoids synchronization issues as would occur if different threads
+	updated a single dictionary but were dedicated to different thread segments.
+		On all platforms, the unique word count for each tweet is fed into a std::vector which
+	is used by a RunningMedian object to compute the running median.
 */
-typedef std::map<std::string,int>		Dictionary;
 class TweetWords
 {
 	public:
+		typedef std::map<std::string,int>		Dictionary;
+
 		static const int 	AVG_CHARS_PER_TWEET = 60, //According to the internet
 							AVG_WORDS_PER_TWEET = 10; //According to OxfordWords, rounding down
 		
-		TweetWords(const std::string& input_file, const std::string& ft1, int max_threads = -1);
+		TweetWords(const std::string& input_file, const std::string& ft1, int user_max_threads);
 		
 		/*
 		ReadTweets(): Launches the threads which process the tweets and update the dictionary,
@@ -34,18 +40,18 @@ class TweetWords
 		void ReadTweets();
 			
 		/*
-		InitThreads(): Sets up the threads and associated file locations for parallel
+		InitChunk(): Sets up the threads and associated file locations for parallel
 		processing of the input file.
-		Modifies: _countSet, _numThreads, _thdStarts
+		Modifies: _chunkBegin, _chunkEnd
 		*/
-		long int InitThreads(long int bstart);
+		long int InitChunk(long int start_byte);
 		
 		long int NumBytes() const { return _numBytes; }
 		
 		/*
-		UniqueCts(): Return a vector containing the number of unique words for every tweet processed.
+		UniqueCts(): Return the vector containing the number of unique words for every tweet processed.
 		*/
-		std::vector<uchar> UniqueCts() const;
+		const std::vector<uchar>& UniqueCts() const { return _counts; }
 		
 		/*
 		Write(): Write the data for feature 1 to file.
@@ -73,9 +79,11 @@ class TweetWords
 		//_numBytes: Number of bytes in the file
 		long int _numBytes;
 		
-		//_numThreads, _thdStarts: Thread management data members 
+		//_numThreads: Number of threads used for reading the file. 
 		int _numThreads;
-		std::vector<std::streampos> _thdStarts;
+		
+		//chunkStart, _chunkEnd: The beginning and end within the file for the current chunk
+		long int _chunkStart, _chunkEnd;
 	
 		//_words: Stores the unique words from all tweets and their frequencies.
 		std::vector<Dictionary> _dicts;
